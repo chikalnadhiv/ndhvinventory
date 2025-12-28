@@ -1,21 +1,15 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
-
-const ACTIVITIES_FILE = path.join(process.cwd(), 'activities.json');
-
-// Ensure file exists
-if (!fs.existsSync(ACTIVITIES_FILE)) {
-  fs.writeFileSync(ACTIVITIES_FILE, JSON.stringify([]));
-}
+import prisma from '@/lib/prisma';
 
 export async function GET() {
   try {
-    const data = fs.readFileSync(ACTIVITIES_FILE, 'utf8');
-    const activities = JSON.parse(data);
-    // Return last 20 activities
-    return NextResponse.json(activities.slice(0, 20));
+    const activities = await prisma.activity.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: 20
+    });
+    return NextResponse.json(activities);
   } catch (error) {
+    console.error('Failed to fetch activities:', error);
     return NextResponse.json({ error: 'Failed to fetch activities' }, { status: 500 });
   }
 }
@@ -25,28 +19,18 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { type, user, rack, message } = body;
 
-    const newActivity = {
-      id: Date.now().toString(),
-      type,
-      user,
-      rack,
-      message,
-      createdAt: new Date().toISOString()
-    };
-
-    const data = fs.readFileSync(ACTIVITIES_FILE, 'utf8');
-    const activities = JSON.parse(data);
-    
-    // Add to beginning
-    activities.unshift(newActivity);
-    
-    // Keep only last 50
-    const limitedActivities = activities.slice(0, 50);
-    
-    fs.writeFileSync(ACTIVITIES_FILE, JSON.stringify(limitedActivities, null, 2));
+    const newActivity = await prisma.activity.create({
+      data: {
+        type,
+        user,
+        rack,
+        message
+      }
+    });
 
     return NextResponse.json(newActivity);
   } catch (error) {
+    console.error('Failed to create activity:', error);
     return NextResponse.json({ error: 'Failed to create activity' }, { status: 500 });
   }
 }

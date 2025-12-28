@@ -3,7 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -57,4 +58,13 @@ model StockOpname {
   @@index([kd_brg])
   @@index([barcode])
   @@index([rackNo])
+}
+
+model Activity {
+  id        String   @id @default(cuid())
+  type      String   // SESSION_CLOSED, NEW_RECORDS, etc
+  user      String?
+  rack      String?
+  message   String?
+  createdAt DateTime @default(now())
 }

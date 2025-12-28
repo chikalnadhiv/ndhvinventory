@@ -4,16 +4,14 @@
   "private": true,
   "scripts": {
     "dev": "next dev --experimental-https",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
-    "@prisma/adapter-better-sqlite3": "^7.2.0",
-    "@prisma/client": "^7.2.0",
+    "@prisma/client": "^6.1.0",
     "@tailwindcss/postcss": "^4.1.18",
     "bcryptjs": "^3.0.3",
-    "better-sqlite3": "^12.5.0",
     "cloudinary": "^2.8.0",
     "dotenv": "^17.2.3",
     "html5-qrcode": "^2.3.8",
@@ -21,7 +19,7 @@
     "next": "16.0.10",
     "next-auth": "^5.0.0-beta.30",
     "next-cloudinary": "^6.17.5",
-    "prisma": "^7.2.0",
+    "prisma": "^6.1.0",
     "react": "19.2.1",
     "react-dom": "19.2.1",
     "uuid": "^13.0.0",
