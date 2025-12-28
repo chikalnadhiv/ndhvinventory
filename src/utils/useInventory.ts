@@ -36,7 +36,7 @@ export const useInventory = () => {
     }
   };
 
-  // Save multiple items (Import)
+  // Save multiple items (Import) - Legacy method for small imports
   const saveItems = async (newItems: InventoryItem[]) => {
     // Note: This replaces/adds items via API
     try {
@@ -47,9 +47,62 @@ export const useInventory = () => {
         });
         if (response.ok) {
             await refreshItems();
+        } else {
+            throw new Error(`Server error: ${response.status}`);
         }
     } catch (error) {
         console.error("Failed to save items to API:", error);
+        throw error;
+    }
+  };
+
+  // Batch import for large datasets
+  const saveItemsInBatches = async (
+    newItems: InventoryItem[], 
+    onProgress?: (current: number, total: number) => void
+  ) => {
+    const BATCH_SIZE = 500; // Items per batch
+    const totalBatches = Math.ceil(newItems.length / BATCH_SIZE);
+    
+    console.log(`Starting batch import: ${newItems.length} items in ${totalBatches} batches`);
+    
+    try {
+      for (let i = 0; i < totalBatches; i++) {
+        const start = i * BATCH_SIZE;
+        const end = Math.min(start + BATCH_SIZE, newItems.length);
+        const batch = newItems.slice(start, end);
+        
+        console.log(`Uploading batch ${i + 1}/${totalBatches} (${batch.length} items)`);
+        
+        const response = await fetch('/api/inventory', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items: batch })
+        });
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Batch ${i + 1} failed: ${response.status} ${errorText}`);
+        }
+        
+        // Update progress
+        if (onProgress) {
+          onProgress(i + 1, totalBatches);
+        }
+        
+        // Small delay between batches to avoid overwhelming the server
+        if (i < totalBatches - 1) {
+          await new Promise(resolve => setTimeout(resolve, 200));
+        }
+      }
+      
+      // Refresh data after all batches complete
+      await refreshItems();
+      console.log('Batch import completed successfully');
+      
+    } catch (error) {
+      console.error("Batch import failed:", error);
+      throw error;
     }
   };
 
@@ -71,5 +124,5 @@ export const useInventory = () => {
     return false;
   };
 
-  return { items, saveItems, updateItemQty, isLoaded, refreshItems };
+  return { items, saveItems, saveItemsInBatches, updateItemQty, isLoaded, refreshItems };
 };

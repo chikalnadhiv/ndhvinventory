@@ -38,7 +38,7 @@ export default function Home() {
   const { data: session } = useSession();
   const { language, t } = useLanguage();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { items, saveItems, isLoaded, refreshItems } = useInventory();
+  const { items, saveItems, saveItemsInBatches, isLoaded, refreshItems } = useInventory();
   
   const [searchQuery, setSearchQuery] = useState("");
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -152,17 +152,41 @@ export default function Home() {
         const importedItems = await importFromExcel(e.target.files[0]);
         console.log(`Importing ${importedItems.length} items...`);
         
-        await saveItems(importedItems);
-        
-        // Force refresh to ensure data appears
-        await new Promise(resolve => setTimeout(resolve, 500)); // Small delay for DB
-        await refreshItems();
+        // Use batch import for large datasets (>1000 items)
+        if (importedItems.length > 1000) {
+          console.log('Using batch import for large dataset');
+          
+          // Show initial progress modal
+          setAlertConfig({
+            title: t('importing') || "Importing...",
+            message: `Preparing to import ${importedItems.length.toLocaleString()} items in batches...`,
+            type: "info",
+            isOpen: true
+          });
+          
+          // Track progress
+          await saveItemsInBatches(importedItems, (current, total) => {
+            const percentage = Math.round((current / total) * 100);
+            setAlertConfig({
+              title: t('importing') || "Importing...",
+              message: `Batch ${current}/${total} (${percentage}%) - Please wait...`,
+              type: "info",
+              isOpen: true
+            });
+          });
+          
+        } else {
+          // Use regular import for small datasets
+          await saveItems(importedItems);
+          await new Promise(resolve => setTimeout(resolve, 500));
+          await refreshItems();
+        }
         
         console.log('Import completed and data refreshed');
         
         setAlertConfig({
           title: t('import_success') || "Import Success",
-          message: `Successfully imported ${importedItems.length} items!`,
+          message: `Successfully imported ${importedItems.length.toLocaleString()} items!`,
           type: "success",
           isOpen: true
         });

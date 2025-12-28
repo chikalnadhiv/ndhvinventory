@@ -41,6 +41,7 @@ const translations = {
     'export': 'Ekspor',
     'import_success': 'Impor Berhasil',
     'import_failed': 'Impor Gagal',
+    'importing': 'Mengimpor...',
     
     // Management Page
     'opname_results': 'Hasil Stok Opname',
@@ -252,6 +253,7 @@ const translations = {
     'export': 'Export',
     'import_success': 'Import Success',
     'import_failed': 'Import Failed',
+    'importing': 'Importing...',
 
     // Management Page
     'opname_results': 'Stock Opname Results',
