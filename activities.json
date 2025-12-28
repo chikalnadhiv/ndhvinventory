@@ -1,0 +1,42 @@
+[
+  {
+    "id": "1766832677842",
+    "type": "SESSION_CLOSED",
+    "user": "Administrator",
+    "rack": "RAK 96",
+    "message": "Closed session for rack RAK 96",
+    "createdAt": "2025-12-27T10:51:17.842Z"
+  },
+  {
+    "id": "1766832597764",
+    "type": "SESSION_CLOSED",
+    "user": "Ucup Kapsul",
+    "rack": "PRT - 01",
+    "message": "Closed session for rack PRT - 01",
+    "createdAt": "2025-12-27T10:49:57.764Z"
+  },
+  {
+    "id": "1766832016411",
+    "type": "SESSION_CLOSED",
+    "user": "Administrator",
+    "rack": "RAK 69",
+    "message": "Closed session for rack RAK 69",
+    "createdAt": "2025-12-27T10:40:16.411Z"
+  },
+  {
+    "id": "1766830262954",
+    "type": "SESSION_CLOSED",
+    "user": "Ucup Kapsul",
+    "rack": "PRT - 01",
+    "message": "Closed session for rack PRT - 01",
+    "createdAt": "2025-12-27T10:11:02.955Z"
+  },
+  {
+    "id": "1766830126635",
+    "type": "SESSION_CLOSED",
+    "user": "Ucup Kapsul",
+    "rack": "PRT - 01",
+    "message": "Closed session for rack PRT - 01",
+    "createdAt": "2025-12-27T10:08:46.635Z"
+  }
+]

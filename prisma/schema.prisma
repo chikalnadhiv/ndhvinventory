@@ -1,0 +1,60 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      String   @default("USER") // ADMIN, USER
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model InventoryItem {
+  id        String   @id @default(cuid())
+  kd_brg    String?
+  barcode   String?
+  nm_brg    String
+  satuan    String?
+  hrg_beli  Float    @default(0)
+  qty       Int      @default(0)
+  gol1      Float    @default(0)
+  golongan  String?
+  sub_gol   String?
+  qty_min   Int      @default(0)
+  qty_max   Int      @default(0)
+  kode_supl String?
+  imageUrl  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([kd_brg])
+  @@index([barcode])
+}
+
+model StockOpname {
+  id            String   @id @default(cuid())
+  inventoryId   String
+  kd_brg        String?
+  barcode       String?
+  nm_brg        String
+  systemQty     Int
+  physicalQty   Int
+  difference    Int
+  satuan        String?
+  hrg_beli      Float    @default(0)
+  rackNo        String?
+  userName      String?
+  division      String?
+  createdAt     DateTime @default(now())
+
+  @@index([kd_brg])
+  @@index([barcode])
+  @@index([rackNo])
+}

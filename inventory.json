@@ -1,0 +1,30 @@
+
+[
+  {
+    "id": "1",
+    "name": "Wireless Mouse Logi",
+    "sku": "899123456",
+    "price": 145000,
+    "stock": 120,
+    "category": "Electronics",
+    "timestamp": "2025-01-01T10:00:00.000Z"
+  },
+  {
+    "id": "2",
+    "name": "Samsung Monitor 24",
+    "sku": "SAM-24-LED",
+    "price": 1850000,
+    "stock": 5,
+    "category": "Electronics",
+    "timestamp": "2025-01-01T10:05:00.000Z"
+  },
+  {
+    "id": "3",
+    "name": "USB C Cable 1m",
+    "sku": "CABLE-C-1M",
+    "price": 25000,
+    "stock": 300,
+    "category": "Accessories",
+    "timestamp": "2025-01-01T10:10:00.000Z"
+  }
+]
