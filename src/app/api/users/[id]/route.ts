@@ -3,7 +3,7 @@ import prisma from "@/lib/prisma";
 import { auth } from "@/auth";
 import bcrypt from "bcryptjs";
 
-export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function PUT(req: Request, { params }: { params: any }) {
   const session = await auth();
   if (!session || (session.user as any)?.role !== "ADMIN") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -30,7 +30,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   }
 }
 
-export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(req: Request, { params }: { params: any }) {
   const session = await auth();
   if (!session || (session.user as any)?.role !== "ADMIN") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
