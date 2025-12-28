@@ -38,7 +38,7 @@ export default function Home() {
   const { data: session } = useSession();
   const { language, t } = useLanguage();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { items, saveItems, isLoaded } = useInventory();
+  const { items, saveItems, isLoaded, refreshItems } = useInventory();
   
   const [searchQuery, setSearchQuery] = useState("");
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -150,18 +150,32 @@ export default function Home() {
     if (e.target.files && e.target.files[0]) {
       try {
         const importedItems = await importFromExcel(e.target.files[0]);
+        console.log(`Importing ${importedItems.length} items...`);
+        
         await saveItems(importedItems);
+        
+        // Force refresh to ensure data appears
+        await new Promise(resolve => setTimeout(resolve, 500)); // Small delay for DB
+        await refreshItems();
+        
+        console.log('Import completed and data refreshed');
+        
         setAlertConfig({
-          title: "Import Success",
+          title: t('import_success') || "Import Success",
           message: `Successfully imported ${importedItems.length} items!`,
           type: "success",
           isOpen: true
         });
+        
+        // Reset file input
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
       } catch (error) {
         console.error("Import failed:", error);
         setAlertConfig({
-          title: "Import Failed",
-          message: "Could not process the Excel file. Please check the format.",
+          title: t('import_failed') || "Import Failed",
+          message: error instanceof Error ? error.message : "Could not process the Excel file. Please check the format.",
           type: "warning",
           isOpen: true
         });
@@ -547,7 +561,6 @@ export default function Home() {
                 className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-2.5 text-slate-300 bg-white/5 border border-white/10 rounded-xl hover:text-white hover:bg-white/10 transition-all font-bold text-xs uppercase tracking-widest" 
               >
                 <Upload size={16} />
-                Import
                 {t('import')}
               </button>
               <button 

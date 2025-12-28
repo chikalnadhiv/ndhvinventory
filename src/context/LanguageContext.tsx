@@ -39,6 +39,8 @@ const translations = {
     'search_inventory': 'Cari inventori...',
     'import': 'Impor',
     'export': 'Ekspor',
+    'import_success': 'Impor Berhasil',
+    'import_failed': 'Impor Gagal',
     
     // Management Page
     'opname_results': 'Hasil Stok Opname',
@@ -248,6 +250,8 @@ const translations = {
     'search_inventory': 'Search inventory...',
     'import': 'Import',
     'export': 'Export',
+    'import_success': 'Import Success',
+    'import_failed': 'Import Failed',
 
     // Management Page
     'opname_results': 'Stock Opname Results',
