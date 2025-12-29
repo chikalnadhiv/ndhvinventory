@@ -3,6 +3,9 @@ import prisma from "@/lib/prisma";
 import { auth } from "@/auth";
 import { Prisma } from "@prisma/client";
 
+export const maxDuration = 60; // Allow 60 seconds max execution time
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -46,13 +49,13 @@ export async function POST(req: Request) {
           barcode: item.barcode || null,
           nm_brg: item.nm_brg || "Unknown Item",
           satuan: item.satuan || null,
-          hrg_beli: Number(item.hrg_beli) || 0,
-          qty: Number(item.qty) || 0,
-          gol1: Number(item.gol1) || 0,
+          hrg_beli: isNaN(Number(item.hrg_beli)) ? 0 : Number(item.hrg_beli),
+          qty: isNaN(Number(item.qty)) ? 0 : Number(item.qty),
+          gol1: isNaN(Number(item.gol1)) ? 0 : Number(item.gol1),
           golongan: item.golongan || null,
           sub_gol: item.sub_gol || null,
-          qty_min: Number(item.qty_min) || 0,
-          qty_max: Number(item.qty_max) || 0,
+          qty_min: isNaN(Number(item.qty_min)) ? 0 : Number(item.qty_min),
+          qty_max: isNaN(Number(item.qty_max)) ? 0 : Number(item.qty_max),
           kode_supl: item.kode_supl || null,
           imageUrl: item.imageUrl || null, // Image URL must be provided by frontend now
       })),
@@ -63,8 +66,18 @@ export async function POST(req: Request) {
       count: result.count,
       message: "Batch inserted successfully"
     });
-  } catch (error) {
-    console.error("Import error:", error);
-    return NextResponse.json({ error: "Failed to import items" }, { status: 500 });
+  } catch (error: any) { // Type as any to access properties
+    console.error("Import Batch Error Detail:", {
+      message: error.message,
+      code: error.code,
+      meta: error.meta,
+      stack: error.stack
+    });
+    
+    // Return the specific error message to the client for debugging
+    return NextResponse.json({ 
+      error: `Import failed: ${error.message || "Unknown error"}`,
+      details: error.code ? `Code: ${error.code}` : undefined
+    }, { status: 500 });
   }
 }
