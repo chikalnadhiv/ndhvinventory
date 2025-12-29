@@ -56,32 +56,62 @@ export const useInventory = () => {
     }
   };
 
-  // Batch import for large datasets
+  // Batch import with robust flow: Backup -> Clear -> Insert
   const saveItemsInBatches = async (
     newItems: InventoryItem[], 
     onProgress?: (current: number, total: number) => void
   ) => {
-    const BATCH_SIZE = 100; // Reduced from 500 for Vercel timeout limits
+    const BATCH_SIZE = 100;
     const totalBatches = Math.ceil(newItems.length / BATCH_SIZE);
     
-    console.log(`Starting batch import: ${newItems.length} items in ${totalBatches} batches`);
+    console.log(`Starting smart batch import for ${newItems.length} items...`);
     
     try {
+      // 1. BACKUP IMAGES
+      if (onProgress) onProgress(0, totalBatches); // Initial 0%
+      console.log("Fetching existing images for backup...");
+      const imagesResponse = await fetch('/api/inventory/images');
+      if (!imagesResponse.ok) throw new Error("Failed to backup images");
+      
+      const existingImages = await imagesResponse.json();
+      const imageMap = new Map<string, string>();
+      existingImages.forEach((item: any) => {
+        if (item.imageUrl) {
+          if (item.kd_brg) imageMap.set(item.kd_brg, item.imageUrl);
+          if (item.barcode) imageMap.set(item.barcode, item.imageUrl);
+        }
+      });
+      console.log(`Backed up ${imageMap.size} images locally.`);
+
+      // 2. CLEAR DATABASE
+      console.log("Clearing existing database...");
+      const clearResponse = await fetch('/api/inventory', { method: 'DELETE' });
+      if (!clearResponse.ok) throw new Error("Failed to clear database");
+      console.log("Database cleared successfully.");
+
+      // 3. MERGE IMAGES & START BATCH IMPORT
       for (let i = 0; i < totalBatches; i++) {
         const start = i * BATCH_SIZE;
         const end = Math.min(start + BATCH_SIZE, newItems.length);
-        const batch = newItems.slice(start, end);
-        const isFirstBatch = i === 0; // Only first batch should delete existing data
         
-        console.log(`Uploading batch ${i + 1}/${totalBatches} (${batch.length} items)${isFirstBatch ? ' - FIRST BATCH' : ''}`);
+        // Prepare batch with restored images
+        const batch = newItems.slice(start, end).map(item => {
+          let imageUrl = null;
+          // Restore image logic
+          if (item.kd_brg && imageMap.has(item.kd_brg)) {
+            imageUrl = imageMap.get(item.kd_brg);
+          } else if (item.barcode && imageMap.has(item.barcode)) {
+            imageUrl = imageMap.get(item.barcode);
+          }
+          return { ...item, imageUrl };
+        });
+        
+        console.log(`Uploading batch ${i + 1}/${totalBatches}`);
         
         const response = await fetch('/api/inventory', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            items: batch,
-            isFirstBatch // Tell API whether to delete existing data
-          })
+          body: JSON.stringify({ items: batch }) // No need for isFirstBatch flag anymore
         });
         
         if (!response.ok) {
@@ -94,9 +124,9 @@ export const useInventory = () => {
           onProgress(i + 1, totalBatches);
         }
         
-        // Small delay between batches to avoid overwhelming the server
+        // Very small delay just to breathe
         if (i < totalBatches - 1) {
-          await new Promise(resolve => setTimeout(resolve, 100)); // Reduced from 200ms
+          await new Promise(resolve => setTimeout(resolve, 50));
         }
       }
       

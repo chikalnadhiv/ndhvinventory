@@ -13,68 +13,37 @@ export async function GET() {
   return NextResponse.json(items);
 }
 
+export async function DELETE(req: Request) {
+  const session = await auth();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  try {
+    // Delete all inventory items
+    await prisma.inventoryItem.deleteMany();
+    return NextResponse.json({ message: "All inventory items cleared" });
+  } catch (error) {
+    console.error("Clear database failed:", error);
+    return NextResponse.json({ error: "Failed to clear database" }, { status: 500 });
+  }
+}
+
 export async function POST(req: Request) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json();
-  const { items, isFirstBatch = true } = body;
+  const { items } = body;
 
   if (!Array.isArray(items)) {
     return NextResponse.json({ error: "Invalid data" }, { status: 400 });
   }
 
-  // Smart import: Preserve existing images
   try {
-    const result = await prisma.$transaction(async (tx: any) => {
-      let imageMap = new Map<string, string>();
-      
-      // Only backup and delete on FIRST batch
-      if (isFirstBatch) {
-        // 1. BACKUP: Fetch existing images before deletion
-        const existingItems = await tx.inventoryItem.findMany({
-          select: {
-            kd_brg: true,
-            barcode: true,
-            imageUrl: true
-          }
-        });
-
-        // Create a map: kd_brg → imageUrl (and barcode as fallback)
-        existingItems.forEach((item: any) => {
-          if (item.imageUrl) {
-            if (item.kd_brg) imageMap.set(item.kd_brg, item.imageUrl);
-            if (item.barcode) imageMap.set(item.barcode, item.imageUrl);
-          }
-        });
-
-        console.log(`[Import] Found ${imageMap.size} existing images to preserve`);
-
-        // 2. Delete all existing items (only on first batch)
-        await tx.inventoryItem.deleteMany();
-        console.log(`[Import] Cleared existing data for fresh import`);
-      } else {
-        console.log(`[Import] Appending batch (not first batch)`);
-      }
-      
-      // 3. Map and insert new items WITH preserved images
-      const data = items.map((item: any) => {
-        const kd_brg = item.kd_brg || null;
-        const barcode = item.barcode || null;
-        
-        // Try to restore image from backup (only relevant for first batch)
-        let imageUrl = null;
-        if (isFirstBatch) {
-          if (kd_brg && imageMap.has(kd_brg)) {
-            imageUrl = imageMap.get(kd_brg)!;
-          } else if (barcode && imageMap.has(barcode)) {
-            imageUrl = imageMap.get(barcode)!;
-          }
-        }
-
-        return {
-          kd_brg,
-          barcode,
+    // Pure batch insert - no deletion logic here anymore
+    const result = await prisma.inventoryItem.createMany({
+      data: items.map((item: any) => ({
+          kd_brg: item.kd_brg || null,
+          barcode: item.barcode || null,
           nm_brg: item.nm_brg || "Unknown Item",
           satuan: item.satuan || null,
           hrg_beli: Number(item.hrg_beli) || 0,
@@ -85,27 +54,14 @@ export async function POST(req: Request) {
           qty_min: Number(item.qty_min) || 0,
           qty_max: Number(item.qty_max) || 0,
           kode_supl: item.kode_supl || null,
-          imageUrl, // ✅ Restored image
-        };
-      });
-
-      const imagesPreserved = data.filter(item => item.imageUrl).length;
-      if (imagesPreserved > 0) {
-        console.log(`[Import] Preserved ${imagesPreserved} images in this batch`);
-      }
-
-      // 4. Batch insert with preserved images
-      return await tx.inventoryItem.createMany({
-        data,
-        skipDuplicates: true, // Skip if duplicate key exists (safer)
-      });
-    }, {
-      timeout: 15000, // 15 second timeout (reduced from 30 for Vercel limits)
+          imageUrl: item.imageUrl || null, // Image URL must be provided by frontend now
+      })),
+      skipDuplicates: true,
     });
 
     return NextResponse.json({ 
       count: result.count,
-      message: isFirstBatch ? "First batch imported with image preservation" : "Batch appended successfully"
+      message: "Batch inserted successfully"
     });
   } catch (error) {
     console.error("Import error:", error);

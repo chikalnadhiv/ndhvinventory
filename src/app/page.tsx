@@ -42,11 +42,18 @@ export default function Home() {
   
   const [searchQuery, setSearchQuery] = useState("");
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const [alertConfig, setAlertConfig] = useState<{title: string, message: string, type: 'info' | 'success' | 'warning' | 'confirm', isOpen: boolean}>({
+  const [alertConfig, setAlertConfig] = useState<{
+    title: string, 
+    message: string, 
+    type: 'info' | 'success' | 'warning' | 'confirm' | 'progress', 
+    isOpen: boolean,
+    progress?: number
+  }>({
     title: '',
     message: '',
     type: 'info',
-    isOpen: false
+    isOpen: false,
+    progress: 0
   });
 
   const isAdmin = (session?.user as any)?.role === "ADMIN";
@@ -156,12 +163,13 @@ export default function Home() {
         if (importedItems.length > 1000) {
           console.log('Using batch import for large dataset');
           
-          // Show initial progress modal
+          // Show initial progress modal with spinner
           setAlertConfig({
             title: t('importing') || "Importing...",
-            message: `Preparing to import ${importedItems.length.toLocaleString()} items in batches...`,
-            type: "info",
-            isOpen: true
+            message: `Preparing to import ${importedItems.length.toLocaleString()} items...`,
+            type: "progress",
+            isOpen: true,
+            progress: 0
           });
           
           // Track progress
@@ -169,9 +177,12 @@ export default function Home() {
             const percentage = Math.round((current / total) * 100);
             setAlertConfig({
               title: t('importing') || "Importing...",
-              message: `Batch ${current}/${total} (${percentage}%) - Please wait...`,
-              type: "info",
-              isOpen: true
+              message: current === 0 
+                ? "Backing up images & Clearing database..." 
+                : `Uploading batch ${current}/${total} (${percentage}%)`,
+              type: "progress",
+              isOpen: true,
+              progress: percentage
             });
           });
           
