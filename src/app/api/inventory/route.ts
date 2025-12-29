@@ -18,7 +18,7 @@ export async function POST(req: Request) {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json();
-  const { items } = body;
+  const { items, isFirstBatch = true } = body;
 
   if (!Array.isArray(items)) {
     return NextResponse.json({ error: "Invalid data" }, { status: 400 });
@@ -27,40 +27,49 @@ export async function POST(req: Request) {
   // Smart import: Preserve existing images
   try {
     const result = await prisma.$transaction(async (tx: any) => {
-      // 1. BACKUP: Fetch existing images before deletion
-      const existingItems = await tx.inventoryItem.findMany({
-        select: {
-          kd_brg: true,
-          barcode: true,
-          imageUrl: true
-        }
-      });
+      let imageMap = new Map<string, string>();
+      
+      // Only backup and delete on FIRST batch
+      if (isFirstBatch) {
+        // 1. BACKUP: Fetch existing images before deletion
+        const existingItems = await tx.inventoryItem.findMany({
+          select: {
+            kd_brg: true,
+            barcode: true,
+            imageUrl: true
+          }
+        });
 
-      // Create a map: kd_brg → imageUrl (and barcode as fallback)
-      const imageMap = new Map<string, string>();
-      existingItems.forEach((item: any) => {
-        if (item.imageUrl) {
-          if (item.kd_brg) imageMap.set(item.kd_brg, item.imageUrl);
-          if (item.barcode) imageMap.set(item.barcode, item.imageUrl);
-        }
-      });
+        // Create a map: kd_brg → imageUrl (and barcode as fallback)
+        existingItems.forEach((item: any) => {
+          if (item.imageUrl) {
+            if (item.kd_brg) imageMap.set(item.kd_brg, item.imageUrl);
+            if (item.barcode) imageMap.set(item.barcode, item.imageUrl);
+          }
+        });
 
-      console.log(`[Import] Found ${imageMap.size} existing images to preserve`);
+        console.log(`[Import] Found ${imageMap.size} existing images to preserve`);
 
-      // 2. Delete all existing items
-      await tx.inventoryItem.deleteMany();
+        // 2. Delete all existing items (only on first batch)
+        await tx.inventoryItem.deleteMany();
+        console.log(`[Import] Cleared existing data for fresh import`);
+      } else {
+        console.log(`[Import] Appending batch (not first batch)`);
+      }
       
       // 3. Map and insert new items WITH preserved images
       const data = items.map((item: any) => {
         const kd_brg = item.kd_brg || null;
         const barcode = item.barcode || null;
         
-        // Try to restore image from backup
+        // Try to restore image from backup (only relevant for first batch)
         let imageUrl = null;
-        if (kd_brg && imageMap.has(kd_brg)) {
-          imageUrl = imageMap.get(kd_brg)!;
-        } else if (barcode && imageMap.has(barcode)) {
-          imageUrl = imageMap.get(barcode)!;
+        if (isFirstBatch) {
+          if (kd_brg && imageMap.has(kd_brg)) {
+            imageUrl = imageMap.get(kd_brg)!;
+          } else if (barcode && imageMap.has(barcode)) {
+            imageUrl = imageMap.get(barcode)!;
+          }
         }
 
         return {
@@ -81,17 +90,21 @@ export async function POST(req: Request) {
       });
 
       const imagesPreserved = data.filter(item => item.imageUrl).length;
-      console.log(`[Import] Preserved ${imagesPreserved} images in new data`);
+      if (imagesPreserved > 0) {
+        console.log(`[Import] Preserved ${imagesPreserved} images in this batch`);
+      }
 
       // 4. Batch insert with preserved images
       return await tx.inventoryItem.createMany({
         data,
       });
+    }, {
+      timeout: 30000, // 30 second timeout for large batches
     });
 
     return NextResponse.json({ 
       count: result.count,
-      message: "Import successful with image preservation"
+      message: isFirstBatch ? "First batch imported with image preservation" : "Batch appended successfully"
     });
   } catch (error) {
     console.error("Import error:", error);

@@ -71,13 +71,17 @@ export const useInventory = () => {
         const start = i * BATCH_SIZE;
         const end = Math.min(start + BATCH_SIZE, newItems.length);
         const batch = newItems.slice(start, end);
+        const isFirstBatch = i === 0; // Only first batch should delete existing data
         
-        console.log(`Uploading batch ${i + 1}/${totalBatches} (${batch.length} items)`);
+        console.log(`Uploading batch ${i + 1}/${totalBatches} (${batch.length} items)${isFirstBatch ? ' - FIRST BATCH' : ''}`);
         
         const response = await fetch('/api/inventory', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ items: batch })
+          body: JSON.stringify({ 
+            items: batch,
+            isFirstBatch // Tell API whether to delete existing data
+          })
         });
         
         if (!response.ok) {
