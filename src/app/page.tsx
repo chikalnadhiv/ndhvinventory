@@ -178,8 +178,8 @@ export default function Home() {
             setAlertConfig({
               title: t('importing') || "Importing...",
               message: current === 0 
-                ? "Backing up images & Clearing database..." 
-                : `Uploading batch ${current}/${total} (${percentage}%)`,
+                ? t('import_backup')
+                : t('import_uploading', { current, total, percentage }),
               type: "progress",
               isOpen: true,
               progress: percentage

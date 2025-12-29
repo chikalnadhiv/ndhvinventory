@@ -2,6 +2,7 @@
 
 import { X, AlertTriangle, Info, CheckCircle, HelpCircle, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useLanguage } from "../context/LanguageContext";
 
 interface ModalProps {
   isOpen: boolean;
@@ -27,6 +28,7 @@ export default function Modal({
   cancelText = 'Cancel'
 }: ModalProps) {
   const [mounted, setMounted] = useState(false);
+  const { t } = useLanguage();
 
   useEffect(() => {
     setMounted(true);
@@ -91,7 +93,7 @@ export default function Modal({
                  />
                </div>
                <div className="mt-2 text-center text-[10px] font-black uppercase tracking-widest text-slate-500">
-                  {Math.round(progress)}% COMPLETE
+                  {Math.round(progress)}% {t('complete_label')}
                </div>
              </div>
            )}

@@ -42,6 +42,9 @@ const translations = {
     'import_success': 'Impor Berhasil',
     'import_failed': 'Impor Gagal',
     'importing': 'Mengimpor...',
+    'import_backup': 'Mencadangkan gambar & Menghapus database...',
+    'import_uploading': 'Mengunggah batch {current}/{total} ({percentage}%)',
+    'complete_label': 'SELESAI',
     
     // Management Page
     'opname_results': 'Hasil Stok Opname',
@@ -254,6 +257,9 @@ const translations = {
     'import_success': 'Import Success',
     'import_failed': 'Import Failed',
     'importing': 'Importing...',
+    'import_backup': 'Backing up images & Clearing database...',
+    'import_uploading': 'Uploading batch {current}/{total} ({percentage}%)',
+    'complete_label': 'COMPLETE',
 
     // Management Page
     'opname_results': 'Stock Opname Results',
