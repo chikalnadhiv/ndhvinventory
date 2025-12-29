@@ -741,6 +741,7 @@ export default function Home() {
         title={alertConfig.title}
         message={alertConfig.message}
         type={alertConfig.type}
+        progress={alertConfig.progress}
       />
     </div>
 
