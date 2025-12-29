@@ -61,7 +61,7 @@ export const useInventory = () => {
     newItems: InventoryItem[], 
     onProgress?: (current: number, total: number) => void
   ) => {
-    const BATCH_SIZE = 500; // Items per batch
+    const BATCH_SIZE = 100; // Reduced from 500 for Vercel timeout limits
     const totalBatches = Math.ceil(newItems.length / BATCH_SIZE);
     
     console.log(`Starting batch import: ${newItems.length} items in ${totalBatches} batches`);
@@ -96,7 +96,7 @@ export const useInventory = () => {
         
         // Small delay between batches to avoid overwhelming the server
         if (i < totalBatches - 1) {
-          await new Promise(resolve => setTimeout(resolve, 200));
+          await new Promise(resolve => setTimeout(resolve, 100)); // Reduced from 200ms
         }
       }
       

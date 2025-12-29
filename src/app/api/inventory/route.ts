@@ -97,9 +97,10 @@ export async function POST(req: Request) {
       // 4. Batch insert with preserved images
       return await tx.inventoryItem.createMany({
         data,
+        skipDuplicates: true, // Skip if duplicate key exists (safer)
       });
     }, {
-      timeout: 30000, // 30 second timeout for large batches
+      timeout: 15000, // 15 second timeout (reduced from 30 for Vercel limits)
     });
 
     return NextResponse.json({ 
