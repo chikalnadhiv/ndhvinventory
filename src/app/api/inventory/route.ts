@@ -45,19 +45,19 @@ export async function POST(req: Request) {
     // Pure batch insert - no deletion logic here anymore
     const result = await prisma.inventoryItem.createMany({
       data: items.map((item: any) => ({
-          kd_brg: item.kd_brg || null,
-          barcode: item.barcode || null,
-          nm_brg: item.nm_brg || "Unknown Item",
-          satuan: item.satuan || null,
+          kd_brg: item.kd_brg ? String(item.kd_brg) : null,
+          barcode: item.barcode ? String(item.barcode) : null,
+          nm_brg: item.nm_brg ? String(item.nm_brg) : "Unknown Item",
+          satuan: item.satuan ? String(item.satuan) : null,
           hrg_beli: isNaN(Number(item.hrg_beli)) ? 0 : Number(item.hrg_beli),
           qty: isNaN(Number(item.qty)) ? 0 : Number(item.qty),
           gol1: isNaN(Number(item.gol1)) ? 0 : Number(item.gol1),
-          golongan: item.golongan || null,
-          sub_gol: item.sub_gol || null,
+          golongan: item.golongan ? String(item.golongan) : null,
+          sub_gol: item.sub_gol ? String(item.sub_gol) : null,
           qty_min: isNaN(Number(item.qty_min)) ? 0 : Number(item.qty_min),
           qty_max: isNaN(Number(item.qty_max)) ? 0 : Number(item.qty_max),
-          kode_supl: item.kode_supl || null,
-          imageUrl: item.imageUrl || null, // Image URL must be provided by frontend now
+          kode_supl: item.kode_supl ? String(item.kode_supl) : null, // Fix potential Excel date/number issue
+          imageUrl: item.imageUrl ? String(item.imageUrl) : null,
       })),
       skipDuplicates: true,
     });
@@ -67,6 +67,9 @@ export async function POST(req: Request) {
       message: "Batch inserted successfully"
     });
   } catch (error: any) { // Type as any to access properties
+    // Log the first item of the failing batch to debug data issues
+    console.error("Failed Batch First Item Sample:", items[0]);
+    
     console.error("Import Batch Error Detail:", {
       message: error.message,
       code: error.code,
