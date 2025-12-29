@@ -32,7 +32,6 @@ import { InventoryItem } from "@/utils/excelHandler";
 import * as XLSX from 'xlsx';
 import Modal from "@/components/Modal";
 import { useLanguage } from "@/context/LanguageContext";
-import { LanguageToggle } from "@/components/LanguageToggle";
 
 
 export default function StockOpnamePage() {
@@ -527,7 +526,6 @@ export default function StockOpnamePage() {
               </form>
 
                  <div className="flex items-center gap-2">
-               <LanguageToggle />
                <Link 
                  href="/"
                  className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-slate-400 hover:text-white transition-all text-xs font-bold uppercase tracking-widest active:scale-95"

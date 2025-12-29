@@ -33,7 +33,6 @@ import { useStockOpname, StockOpnameRecord } from "@/utils/useStockOpname";
 import * as XLSX from 'xlsx';
 import Modal from "@/components/Modal";
 import { useLanguage } from "@/context/LanguageContext";
-import { LanguageToggle } from "@/components/LanguageToggle";
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(amount);
@@ -398,7 +397,6 @@ export default function StockOpnameManagePage() {
           </div>
 
             <div className="flex flex-wrap items-center gap-2 md:gap-4">
-              <LanguageToggle />
               <div className="hidden sm:flex p-1 bg-white/5 border border-white/10 rounded-2xl">
                 <button 
                    onClick={() => setViewMode('list')}

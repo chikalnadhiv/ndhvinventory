@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Package, Lock, Mail, Loader2 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
-import { LanguageToggle } from "@/components/LanguageToggle";
 
 export default function LoginPage() {
   const { t } = useLanguage();
@@ -123,9 +122,6 @@ export default function LoginPage() {
           </button>
         </form>
         
-        <div className="mt-8 flex justify-center">
-           <LanguageToggle />
-        </div>
       </div>
     </div>
   );
